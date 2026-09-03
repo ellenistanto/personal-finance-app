@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import './App.css';
-import Dashboard from './components/Dashboard';
 import TransactionForm from './components/TransactionForm';
 import TransactionList from './components/TransactionList';
 import Summary from './components/Summary';
@@ -39,7 +38,7 @@ function App() {
     fetchTransactions();
     fetchSummary();
     fetchCategoryData();
-  }, [filters]);
+  }, [filters, fetchTransactions, fetchSummary, fetchCategoryData]);
 
   const fetchCategories = async () => {
     try {
@@ -50,7 +49,7 @@ function App() {
     }
   };
 
-  const fetchTransactions = async () => {
+  const fetchTransactions = useCallback(async () => {
     try {
       setLoading(true);
       const params = {};
@@ -66,9 +65,9 @@ function App() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
 
-  const fetchSummary = async () => {
+  const fetchSummary = useCallback(async () => {
     try {
       const params = {};
       if (filters.startDate) params.startDate = filters.startDate;
@@ -79,9 +78,9 @@ function App() {
     } catch (error) {
       console.error('Error fetching summary:', error);
     }
-  };
+  }, [filters]);
 
-  const fetchCategoryData = async () => {
+  const fetchCategoryData = useCallback(async () => {
     try {
       const params = {};
       if (filters.startDate) params.startDate = filters.startDate;
@@ -93,7 +92,7 @@ function App() {
     } catch (error) {
       console.error('Error fetching category data:', error);
     }
-  };
+  }, [filters]);
 
   const handleAddTransaction = async (transactionData) => {
     try {

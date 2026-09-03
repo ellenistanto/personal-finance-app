@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { format, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
 
 const FilterPanel = ({ categories, filters, onFilterChange }) => {
