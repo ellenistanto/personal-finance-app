@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './App.css';
 import TransactionForm from './components/TransactionForm';
@@ -38,7 +38,8 @@ function App() {
     fetchTransactions();
     fetchSummary();
     fetchCategoryData();
-  }, [filters, fetchTransactions, fetchSummary, fetchCategoryData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters]);
 
   const fetchCategories = async () => {
     try {
@@ -49,7 +50,7 @@ function App() {
     }
   };
 
-  const fetchTransactions = useCallback(async () => {
+  const fetchTransactions = async () => {
     try {
       setLoading(true);
       const params = {};
@@ -65,9 +66,9 @@ function App() {
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  };
 
-  const fetchSummary = useCallback(async () => {
+  const fetchSummary = async () => {
     try {
       const params = {};
       if (filters.startDate) params.startDate = filters.startDate;
@@ -78,9 +79,9 @@ function App() {
     } catch (error) {
       console.error('Error fetching summary:', error);
     }
-  }, [filters]);
+  };
 
-  const fetchCategoryData = useCallback(async () => {
+  const fetchCategoryData = async () => {
     try {
       const params = {};
       if (filters.startDate) params.startDate = filters.startDate;
@@ -92,7 +93,7 @@ function App() {
     } catch (error) {
       console.error('Error fetching category data:', error);
     }
-  }, [filters]);
+  };
 
   const handleAddTransaction = async (transactionData) => {
     try {
