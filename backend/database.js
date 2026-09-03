@@ -1,5 +1,5 @@
-import pg from 'pg';
-import dotenv from 'dotenv';
+const pg = require('pg');
+const dotenv = require('dotenv');
 
 dotenv.config();
 
@@ -20,7 +20,7 @@ pool.on('error', (err) => {
 });
 
 // Initialize database tables
-export const initDatabase = async () => {
+const initDatabase = async () => {
   const client = await pool.connect();
   try {
     await client.query(`
@@ -72,4 +72,5 @@ export const initDatabase = async () => {
   }
 };
 
-export default pool;
+pool.initDatabase = initDatabase;
+module.exports = pool;

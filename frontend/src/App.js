@@ -7,7 +7,15 @@ import Summary from './components/Summary';
 import CategoryChart from './components/CategoryChart';
 import FilterPanel from './components/FilterPanel';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+/*
+ * API URL configuration:
+ * - Uses REACT_APP_API_URL from Vercel Environment Variables if set
+ * - Falls back to '/api' (relative path) which works on Vercel since
+ *   frontend and backend are served from the same domain
+ * - In local development, set REACT_APP_API_URL=http://localhost:5000/api
+ *   in frontend/.env
+ */
+const API_URL = process.env.REACT_APP_API_URL || '/api';
 
 function App() {
   const [transactions, setTransactions] = useState([]);

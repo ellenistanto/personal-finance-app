@@ -1,8 +1,9 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import pool, { initDatabase } from './database.js';
-import { initTelegramBot } from './telegramBot.js';
+const express = require('express');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const pool = require('./database.js');
+const { initTelegramBot } = require('./telegramBot.js');
+const initDatabase = pool.initDatabase;
 
 dotenv.config();
 
@@ -13,9 +14,31 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// Initialize database and telegram bot
-initDatabase().then(() => {
+// Initialize database (track the promise so we can wait for it in serverless)
+let dbInitialized = false;
+const dbInitPromise = initDatabase().then(() => {
   initTelegramBot();
+  dbInitialized = true;
+}).catch((err) => {
+  console.error('Failed to initialize database:', err);
+  dbInitialized = true; // Mark as initialized even on failure to avoid blocking forever
+});
+
+// Middleware: wait for database initialization before processing requests
+// This ensures tables exist before any API route queries the database
+// In warm starts (Vercel Fluid Compute), dbInitialized is already true
+app.use(async (req, res, next) => {
+  if (dbInitialized) {
+    return next();
+  }
+  if (dbInitPromise) {
+    try {
+      await dbInitPromise;
+    } catch (e) {
+      // Database init failed, routes will return 500
+    }
+  }
+  next();
 });
 
 // Routes
@@ -242,12 +265,14 @@ app.get('/api/categories', async (req, res) => {
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running' });
-  
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+// Only start listening in local development (not in Vercel serverless)
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+}
 
-// Export app untuk Vercel
+// Export app for Vercel
 module.exports = app;

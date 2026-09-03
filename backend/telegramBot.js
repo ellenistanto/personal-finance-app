@@ -1,6 +1,6 @@
-import TelegramBot from 'node-telegram-bot-api';
-import dotenv from 'dotenv';
-import pool from './database.js';
+const TelegramBot = require('node-telegram-bot-api');
+const dotenv = require('dotenv');
+const pool = require('./database.js');
 
 dotenv.config();
 
@@ -14,12 +14,20 @@ if (process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_BOT_TOKEN !== 'your_t
 // Store user states for conversation flow
 const userStates = {};
 
-export const initTelegramBot = () => {
+const initTelegramBot = () => {
   if (!bot) {
     console.log('Telegram bot token not configured. Skipping bot initialization...');
     return;
   }
-  
+
+  // Skip polling initialization in Vercel/serverless environment
+  // Polling does not work in serverless functions (they spin up/down per request)
+  // The bot will need webhook mode for serverless environments
+  if (process.env.VERCEL) {
+    console.log('Running on Vercel. Telegram bot polling is disabled for serverless environment.');
+    return;
+  }
+
   console.log('Telegram bot is running...');
 
   // Command: /start
@@ -41,7 +49,7 @@ export const initTelegramBot = () => {
   bot.onText(/\/pemasukan (.+)/, async (msg, match) => {
     const chatId = msg.chat.id;
     const input = match[1].trim().split(' ');
-    
+
     if (input.length < 1) {
       bot.sendMessage(chatId, '❌ Format salah! Gunakan: /pemasukan <jumlah> <deskripsi>');
       return;
@@ -60,7 +68,7 @@ export const initTelegramBot = () => {
       const categoryResult = await pool.query(
         `SELECT id FROM categories WHERE type = 'pemasukan' AND name = 'Lainnya' LIMIT 1`
       );
-      
+
       const categoryId = categoryResult.rows[0]?.id || null;
 
       await pool.query(
@@ -84,7 +92,7 @@ export const initTelegramBot = () => {
   bot.onText(/\/pengeluaran (.+)/, async (msg, match) => {
     const chatId = msg.chat.id;
     const input = match[1].trim().split(' ');
-    
+
     if (input.length < 1) {
       bot.sendMessage(chatId, '❌ Format salah! Gunakan: /pengeluaran <jumlah> <deskripsi>');
       return;
@@ -103,7 +111,7 @@ export const initTelegramBot = () => {
       const categoryResult = await pool.query(
         `SELECT id FROM categories WHERE type = 'pengeluaran' AND name = 'Lainnya' LIMIT 1`
       );
-      
+
       const categoryId = categoryResult.rows[0]?.id || null;
 
       await pool.query(
@@ -170,7 +178,7 @@ export const initTelegramBot = () => {
       }
 
       let message = '📋 RIWAYAT TRANSAKSI (10 Terakhir)\n\n';
-      
+
       result.rows.forEach((row, index) => {
         const icon = row.type === 'pemasukan' ? '💰' : '💸';
         const date = new Date(row.transaction_date).toLocaleDateString('id-ID');
@@ -188,4 +196,4 @@ export const initTelegramBot = () => {
   });
 };
 
-export default bot;
+module.exports = { bot, initTelegramBot };

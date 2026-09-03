@@ -109,44 +109,19 @@ Ikuti instruksi untuk login via browser atau email.
 
 ### A. Struktur Project
 
-Vercel butuh struktur khusus untuk deploy backend sebagai Serverless Functions.
+Backend sudah dikonversi ke CommonJS (menggunakan `require` dan `module.exports`) agar kompatibel dengan Vercel Serverless Functions. File `api/index.js` sudah ada sebagai entry point alternatif.
 
-#### Buat file `api/index.js` di root project:
+### B. File `vercel.json` di root project:
 
-```bash
-# Di root project, buat folder api
-mkdir api
-```
-
-Buat file `api/index.js` dengan isi:
-
-```javascript
-// Import server dari backend
-const app = require('../backend/server.js');
-
-// Export untuk Vercel Serverless
-module.exports = app;
-```
-
-#### Update `backend/server.js`:
-
-Tambahkan di bagian paling bawah file:
-
-```javascript
-// Export app untuk Vercel
-module.exports = app;
-```
-
-### B. Buat file `vercel.json` di root project:
-
-File ini sudah ada, tapi pastikan isinya seperti ini:
+File ini sudah ada dan dikonfigurasi dengan benar:
 
 ```json
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
   "builds": [
     {
-      "src": "api/index.js",
+      "src": "backend/server.js",
       "use": "@vercel/node"
     },
     {
@@ -160,7 +135,7 @@ File ini sudah ada, tapi pastikan isinya seperti ini:
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/api/index.js"
+      "dest": "/backend/server.js"
     },
     {
       "src": "/(.*)",
@@ -173,18 +148,9 @@ File ini sudah ada, tapi pastikan isinya seperti ini:
 }
 ```
 
-### C. Update `backend/package.json`:
+### C. `backend/package.json`:
 
-Pastikan ada script ini:
-
-```json
-{
-  "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
-    "vercel-build": "echo 'Backend ready for Vercel'"
-  }
-}
+Backend sudah dikonfigurasi dengan benar (CommonJS, tanpa `"type": "module"`):
 ```
 
 ### D. Update `frontend/package.json`:
