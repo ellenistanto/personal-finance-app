@@ -5,9 +5,24 @@ dotenv.config();
 
 const { Pool } = pg;
 
-const pool = new Pool({
+// Check for DATABASE_URL
+if (!process.env.DATABASE_URL) {
+  console.error('WARNING: DATABASE_URL is not set. Database-dependent endpoints will fail.');
+}
+
+// Create pool with SSL support for cloud PostgreSQL providers (Supabase, Neon, Railway, etc.)
+const poolConfig = {
   connectionString: process.env.DATABASE_URL,
-});
+};
+
+// Enable SSL for production (Vercel deploys to production)
+if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
+  poolConfig.ssl = {
+    rejectUnauthorized: false, // Required for many cloud PostgreSQL providers
+  };
+}
+
+const pool = new Pool(poolConfig);
 
 // Test connection
 pool.on('connect', () => {

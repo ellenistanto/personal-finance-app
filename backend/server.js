@@ -86,7 +86,7 @@ app.get('/api/transactions', async (req, res) => {
     const result = await pool.query(query, params);
     res.json(result.rows);
   } catch (error) {
-    console.error('Error fetching transactions:', error);
+    console.error('Error fetching transactions:', error.message || error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -123,7 +123,7 @@ app.get('/api/transactions/summary', async (req, res) => {
     const result = await pool.query(query, params);
     res.json(result.rows[0]);
   } catch (error) {
-    console.error('Error fetching summary:', error);
+    console.error('Error fetching summary:', error.message || error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -173,7 +173,7 @@ app.get('/api/transactions/by-category', async (req, res) => {
     const result = await pool.query(query, params);
     res.json(result.rows);
   } catch (error) {
-    console.error('Error fetching by category:', error);
+    console.error('Error fetching by category:', error.message || error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -199,7 +199,16 @@ app.post('/api/transactions', async (req, res) => {
 
     res.status(201).json(result.rows[0]);
   } catch (error) {
-    console.error('Error creating transaction:', error);
+    console.error('Error creating transaction:', error.message);
+    if (!process.env.DATABASE_URL) {
+      return res.status(500).json({ error: 'Database not configured. Set DATABASE_URL environment variable.' });
+    }
+    if (error.code === '42P01') {
+      return res.status(500).json({ error: 'Database tables not initialized. Waiting for initialization...' });
+    }
+    if (error.code === '23503') {
+      return res.status(400).json({ error: 'Invalid category_id. Category does not exist.' });
+    }
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -223,7 +232,7 @@ app.put('/api/transactions/:id', async (req, res) => {
 
     res.json(result.rows[0]);
   } catch (error) {
-    console.error('Error updating transaction:', error);
+    console.error('Error updating transaction:', error.message || error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -244,7 +253,7 @@ app.delete('/api/transactions/:id', async (req, res) => {
 
     res.json({ message: 'Transaction deleted successfully' });
   } catch (error) {
-    console.error('Error deleting transaction:', error);
+    console.error('Error deleting transaction:', error.message || error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -257,7 +266,7 @@ app.get('/api/categories', async (req, res) => {
     );
     res.json(result.rows);
   } catch (error) {
-    console.error('Error fetching categories:', error);
+    console.error('Error fetching categories:', error.message || error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
