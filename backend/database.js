@@ -13,12 +13,16 @@ if (!process.env.DATABASE_URL) {
 // Create pool with SSL support for cloud PostgreSQL providers (Supabase, Neon, Railway, etc.)
 const poolConfig = {
   connectionString: process.env.DATABASE_URL,
+  // Supabase Transaction Pooler (PgBouncer) requires max 1 connection per serverless function
+  max: 1,
+  idleTimeoutMillis: 10000,
+  connectionTimeoutMillis: 10000,
 };
 
 // Enable SSL for production (Vercel deploys to production)
 if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
   poolConfig.ssl = {
-    rejectUnauthorized: false, // Required for many cloud PostgreSQL providers
+    rejectUnauthorized: false, // Required for Supabase and other cloud PostgreSQL providers
   };
 }
 

@@ -111,7 +111,8 @@ function App() {
       fetchCategoryData();
     } catch (error) {
       console.error('Error adding transaction:', error);
-      alert('Gagal menambahkan transaksi');
+      const errMsg = error.response?.data?.error || error.response?.data?.detail || 'Gagal menambahkan transaksi';
+      alert(`❌ ${errMsg}`);
     }
   };
 

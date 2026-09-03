@@ -199,17 +199,20 @@ app.post('/api/transactions', async (req, res) => {
 
     res.status(201).json(result.rows[0]);
   } catch (error) {
-    console.error('Error creating transaction:', error.message);
+    console.error('Error creating transaction:', error.message, '| Code:', error.code);
     if (!process.env.DATABASE_URL) {
       return res.status(500).json({ error: 'Database not configured. Set DATABASE_URL environment variable.' });
     }
     if (error.code === '42P01') {
-      return res.status(500).json({ error: 'Database tables not initialized. Waiting for initialization...' });
+      return res.status(500).json({ error: 'Database tables not initialized.', detail: error.message });
     }
     if (error.code === '23503') {
       return res.status(400).json({ error: 'Invalid category_id. Category does not exist.' });
     }
-    res.status(500).json({ error: 'Internal server error' });
+    if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT' || error.code === 'ENOTFOUND') {
+      return res.status(500).json({ error: 'Cannot connect to database. Check DATABASE_URL in Vercel env vars.', detail: error.message });
+    }
+    res.status(500).json({ error: 'Internal server error', detail: error.message });
   }
 });
 
