@@ -9,7 +9,7 @@
     "start-backend": "cd backend && npm start",
     "start-frontend": "cd frontend && npm start",
     "dev-backend": "cd backend && npm run dev",
-    "vercel-build": "echo 'Build ready for Vercel'",
+    "vercel-build": "npm run build --prefix frontend",
     "dev": "concurrently \"npm run dev-backend\" \"npm run start-frontend\""
   },
   "keywords": ["finance", "telegram", "bot", "dashboard", "react"],
@@ -17,6 +17,13 @@
   "license": "MIT",
   "engines": {
     "node": ">=18.x"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "pg": "^8.11.3",
+    "node-telegram-bot-api": "^0.64.0"
   },
   "devDependencies": {
     "concurrently": "^8.2.0"
