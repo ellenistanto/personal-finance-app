@@ -6,8 +6,9 @@ dotenv.config();
 
 let bot = null;
 
-// Only initialize bot if token is provided
-if (process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_BOT_TOKEN !== 'your_telegram_bot_token_here') {
+// Only initialize bot if token is provided AND not in Vercel serverless environment
+// Polling blocks serverless functions from completing, causing net::ERR_FAILED
+if (!process.env.VERCEL && process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_BOT_TOKEN !== 'your_telegram_bot_token_here') {
   bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: true });
 }
 
@@ -16,15 +17,7 @@ const userStates = {};
 
 const initTelegramBot = () => {
   if (!bot) {
-    console.log('Telegram bot token not configured. Skipping bot initialization...');
-    return;
-  }
-
-  // Skip polling initialization in Vercel/serverless environment
-  // Polling does not work in serverless functions (they spin up/down per request)
-  // The bot will need webhook mode for serverless environments
-  if (process.env.VERCEL) {
-    console.log('Running on Vercel. Telegram bot polling is disabled for serverless environment.');
+    console.log('Telegram bot token not configured or running on Vercel. Skipping bot initialization...');
     return;
   }
 

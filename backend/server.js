@@ -276,6 +276,16 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running' });
 });
 
+// Error handling middleware (must be after all routes)
+// Prevents unhandled errors from leaving the function in an undefined state
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err.message || err);
+  if (res.headersSent) {
+    return next(err);
+  }
+  res.status(500).json({ error: 'Internal server error' });
+});
+
 // Only start listening in local development (not in Vercel serverless)
 if (!process.env.VERCEL) {
   app.listen(PORT, () => {
