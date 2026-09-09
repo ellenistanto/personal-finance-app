@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const pool = require('./database.js');
-const { initTelegramBot } = require('./telegramBot.js');
+const { initTelegramBot, handleUpdate } = require('./telegramBot.js');
 const initDatabase = pool.initDatabase;
 
 dotenv.config();
@@ -299,6 +299,17 @@ app.get('/api/categories', async (req, res) => {
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running' });
+});
+
+// Telegram Webhook endpoint (receives updates from Telegram)
+app.post('/api/telegram/webhook', async (req, res) => {
+  try {
+    await handleUpdate(req.body);
+    res.sendStatus(200);
+  } catch (error) {
+    console.error('Telegram webhook error:', error);
+    res.sendStatus(500);
+  }
 });
 
 // Error handling middleware (must be after all routes)

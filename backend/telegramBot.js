@@ -6,18 +6,25 @@ dotenv.config();
 
 let bot = null;
 
-// Only initialize bot if token is provided AND not in Vercel serverless environment
-// Polling blocks serverless functions from completing, causing net::ERR_FAILED
-if (!process.env.VERCEL && process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_BOT_TOKEN !== 'your_telegram_bot_token_here') {
-  bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: true });
+// Initialize bot without polling (webhook mode for Vercel, polling for local)
+if (process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_BOT_TOKEN !== 'your_telegram_bot_token_here') {
+  // Use webhook mode on Vercel, polling mode for local development
+  const options = process.env.VERCEL ? { webHook: false } : { polling: true };
+  bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, options);
 }
 
 // Store user states for conversation flow
 const userStates = {};
 
+// Handle incoming webhook update from Telegram
+const handleUpdate = async (update) => {
+  if (!bot) return;
+  bot.processUpdate(update);
+};
+
 const initTelegramBot = () => {
   if (!bot) {
-    console.log('Telegram bot token not configured or running on Vercel. Skipping bot initialization...');
+    console.log('Telegram bot token not configured. Skipping bot initialization...');
     return;
   }
 
@@ -189,4 +196,4 @@ const initTelegramBot = () => {
   });
 };
 
-module.exports = { bot, initTelegramBot };
+module.exports = { bot, initTelegramBot, handleUpdate };
