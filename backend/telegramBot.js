@@ -6,69 +6,61 @@ dotenv.config();
 
 let bot = null;
 
-// Initialize bot without polling (webhook mode for Vercel, polling for local)
+// Initialize bot
 if (process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_BOT_TOKEN !== 'your_telegram_bot_token_here') {
-  // Use webhook mode on Vercel, polling mode for local development
-  const options = process.env.VERCEL ? { webHook: false } : { polling: true };
-  bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, options);
+  // Use polling only for local development (not on Vercel)
+  const isServerless = !!process.env.VERCEL;
+  bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, {
+    polling: !isServerless,
+  });
+} else {
+  console.warn('TELEGRAM_BOT_TOKEN is not set or using placeholder.');
 }
 
-// Store user states for conversation flow
-const userStates = {};
+// Process single message asynchronously (serverless-compatible)
+const processMessage = async (msg) => {
+  if (!bot || !msg || !msg.text) return;
 
-// Handle incoming webhook update from Telegram
-const handleUpdate = async (update) => {
-  if (!bot) return;
-  bot.processUpdate(update);
-};
+  const chatId = msg.chat.id;
+  const text = msg.text.trim();
 
-const initTelegramBot = () => {
-  if (!bot) {
-    console.log('Telegram bot token not configured. Skipping bot initialization...');
-    return;
-  }
+  console.log(`[Telegram] Processing message from ${chatId}: "${text}"`);
 
-  console.log('Telegram bot is running...');
-
-  // Command: /start
-  bot.onText(/\/start/, (msg) => {
-    const chatId = msg.chat.id;
-    bot.sendMessage(
-      chatId,
-      `Selamat datang di Personal Finance Bot! 🏦\n\n` +
-      `Gunakan perintah berikut:\n` +
-      `/pemasukan <jumlah> <deskripsi> - Catat pemasukan\n` +
-      `/pengeluaran <jumlah> <deskripsi> - Catat pengeluaran\n` +
-      `/saldo - Lihat saldo dan ringkasan\n` +
-      `/riwayat - Lihat 10 transaksi terakhir\n\n` +
-      `Contoh: /pemasukan 1000000 gaji bulanan`
-    );
-  });
-
-  // Command: /pemasukan
-  bot.onText(/\/pemasukan (.+)/, async (msg, match) => {
-    const chatId = msg.chat.id;
-    const input = match[1].trim().split(' ');
-
-    if (input.length < 1) {
-      bot.sendMessage(chatId, '❌ Format salah! Gunakan: /pemasukan <jumlah> <deskripsi>');
+  try {
+    // Command: /start
+    if (text.startsWith('/start')) {
+      await bot.sendMessage(
+        chatId,
+        `Selamat datang di Personal Finance Bot! 🏦\n\n` +
+        `Gunakan perintah berikut:\n` +
+        `/pemasukan <jumlah> <deskripsi> - Catat pemasukan\n` +
+        `/pengeluaran <jumlah> <deskripsi> - Catat pengeluaran\n` +
+        `/saldo - Lihat saldo dan ringkasan\n` +
+        `/riwayat - Lihat 10 transaksi terakhir\n\n` +
+        `Contoh: /pemasukan 1000000 gaji bulanan`
+      );
       return;
     }
 
-    const amount = parseFloat(input[0]);
-    const description = input.slice(1).join(' ') || 'Pemasukan';
+    // Command: /pemasukan
+    if (text.startsWith('/pemasukan')) {
+      const parts = text.replace('/pemasukan', '').trim().split(' ');
+      if (parts.length === 0 || !parts[0]) {
+        await bot.sendMessage(chatId, '❌ Format salah! Gunakan: /pemasukan <jumlah> <deskripsi>');
+        return;
+      }
 
-    if (isNaN(amount) || amount <= 0) {
-      bot.sendMessage(chatId, '❌ Jumlah harus berupa angka positif!');
-      return;
-    }
+      const amount = parseFloat(parts[0]);
+      const description = parts.slice(1).join(' ') || 'Pemasukan';
 
-    try {
-      // Get default category for pemasukan
+      if (isNaN(amount) || amount <= 0) {
+        await bot.sendMessage(chatId, '❌ Jumlah harus berupa angka positif!');
+        return;
+      }
+
       const categoryResult = await pool.query(
         `SELECT id FROM categories WHERE type = 'pemasukan' AND name = 'Lainnya' LIMIT 1`
       );
-
       const categoryId = categoryResult.rows[0]?.id || null;
 
       await pool.query(
@@ -76,42 +68,34 @@ const initTelegramBot = () => {
         [amount, 'pemasukan', categoryId, description]
       );
 
-      bot.sendMessage(
+      await bot.sendMessage(
         chatId,
         `✅ Pemasukan berhasil dicatat!\n\n` +
         `💰 Jumlah: Rp ${amount.toLocaleString('id-ID')}\n` +
         `📝 Deskripsi: ${description}`
       );
-    } catch (error) {
-      console.error('Error adding pemasukan:', error);
-      bot.sendMessage(chatId, '❌ Terjadi kesalahan saat menyimpan data.');
-    }
-  });
-
-  // Command: /pengeluaran
-  bot.onText(/\/pengeluaran (.+)/, async (msg, match) => {
-    const chatId = msg.chat.id;
-    const input = match[1].trim().split(' ');
-
-    if (input.length < 1) {
-      bot.sendMessage(chatId, '❌ Format salah! Gunakan: /pengeluaran <jumlah> <deskripsi>');
       return;
     }
 
-    const amount = parseFloat(input[0]);
-    const description = input.slice(1).join(' ') || 'Pengeluaran';
+    // Command: /pengeluaran
+    if (text.startsWith('/pengeluaran')) {
+      const parts = text.replace('/pengeluaran', '').trim().split(' ');
+      if (parts.length === 0 || !parts[0]) {
+        await bot.sendMessage(chatId, '❌ Format salah! Gunakan: /pengeluaran <jumlah> <deskripsi>');
+        return;
+      }
 
-    if (isNaN(amount) || amount <= 0) {
-      bot.sendMessage(chatId, '❌ Jumlah harus berupa angka positif!');
-      return;
-    }
+      const amount = parseFloat(parts[0]);
+      const description = parts.slice(1).join(' ') || 'Pengeluaran';
 
-    try {
-      // Get default category for pengeluaran
+      if (isNaN(amount) || amount <= 0) {
+        await bot.sendMessage(chatId, '❌ Jumlah harus berupa angka positif!');
+        return;
+      }
+
       const categoryResult = await pool.query(
         `SELECT id FROM categories WHERE type = 'pengeluaran' AND name = 'Lainnya' LIMIT 1`
       );
-
       const categoryId = categoryResult.rows[0]?.id || null;
 
       await pool.query(
@@ -119,23 +103,17 @@ const initTelegramBot = () => {
         [amount, 'pengeluaran', categoryId, description]
       );
 
-      bot.sendMessage(
+      await bot.sendMessage(
         chatId,
         `✅ Pengeluaran berhasil dicatat!\n\n` +
         `💸 Jumlah: Rp ${amount.toLocaleString('id-ID')}\n` +
         `📝 Deskripsi: ${description}`
       );
-    } catch (error) {
-      console.error('Error adding pengeluaran:', error);
-      bot.sendMessage(chatId, '❌ Terjadi kesalahan saat menyimpan data.');
+      return;
     }
-  });
 
-  // Command: /saldo
-  bot.onText(/\/saldo/, async (msg) => {
-    const chatId = msg.chat.id;
-
-    try {
+    // Command: /saldo
+    if (text.startsWith('/saldo')) {
       const result = await pool.query(`
         SELECT 
           COALESCE(SUM(CASE WHEN type = 'pemasukan' THEN amount ELSE 0 END), 0) as total_pemasukan,
@@ -146,7 +124,7 @@ const initTelegramBot = () => {
 
       const { total_pemasukan, total_pengeluaran, saldo } = result.rows[0];
 
-      bot.sendMessage(
+      await bot.sendMessage(
         chatId,
         `📊 RINGKASAN KEUANGAN\n\n` +
         `💰 Total Pemasukan: Rp ${parseFloat(total_pemasukan).toLocaleString('id-ID')}\n` +
@@ -154,17 +132,11 @@ const initTelegramBot = () => {
         `━━━━━━━━━━━━━━━━━\n` +
         `💵 Saldo: Rp ${parseFloat(saldo).toLocaleString('id-ID')}`
       );
-    } catch (error) {
-      console.error('Error getting saldo:', error);
-      bot.sendMessage(chatId, '❌ Terjadi kesalahan saat mengambil data.');
+      return;
     }
-  });
 
-  // Command: /riwayat
-  bot.onText(/\/riwayat/, async (msg) => {
-    const chatId = msg.chat.id;
-
-    try {
+    // Command: /riwayat
+    if (text.startsWith('/riwayat')) {
       const result = await pool.query(`
         SELECT amount, type, description, transaction_date
         FROM transactions
@@ -173,12 +145,11 @@ const initTelegramBot = () => {
       `);
 
       if (result.rows.length === 0) {
-        bot.sendMessage(chatId, '📭 Belum ada transaksi.');
+        await bot.sendMessage(chatId, '📭 Belum ada transaksi.');
         return;
       }
 
       let message = '📋 RIWAYAT TRANSAKSI (10 Terakhir)\n\n';
-
       result.rows.forEach((row, index) => {
         const icon = row.type === 'pemasukan' ? '💰' : '💸';
         const date = new Date(row.transaction_date).toLocaleDateString('id-ID');
@@ -188,12 +159,47 @@ const initTelegramBot = () => {
         message += `   ${date}\n\n`;
       });
 
-      bot.sendMessage(chatId, message);
-    } catch (error) {
-      console.error('Error getting riwayat:', error);
-      bot.sendMessage(chatId, '❌ Terjadi kesalahan saat mengambil data.');
+      await bot.sendMessage(chatId, message);
+      return;
     }
-  });
+
+    // If message is unknown, ignore or send help
+  } catch (error) {
+    console.error('[Telegram] Error processing message:', error);
+    try {
+      await bot.sendMessage(chatId, '❌ Terjadi kesalahan saat memproses permintaan.');
+    } catch (sendErr) {
+      console.error('[Telegram] Error sending error message:', sendErr);
+    }
+  }
+};
+
+// Handle incoming webhook update from Telegram (awaitable in Vercel!)
+const handleUpdate = async (update) => {
+  if (!bot) {
+    console.warn('[Telegram Webhook] Bot not initialized. Check TELEGRAM_BOT_TOKEN.');
+    return;
+  }
+  if (update && update.message) {
+    await processMessage(update.message);
+  }
+};
+
+// Setup polling listener for local development
+const initTelegramBot = () => {
+  if (!bot) {
+    console.log('Telegram bot token not configured. Skipping bot initialization...');
+    return;
+  }
+
+  if (!process.env.VERCEL) {
+    console.log('Telegram bot is running in polling mode (local)...');
+    bot.on('message', async (msg) => {
+      await processMessage(msg);
+    });
+  } else {
+    console.log('Telegram bot configured in webhook mode (Vercel).');
+  }
 };
 
 module.exports = { bot, initTelegramBot, handleUpdate };
