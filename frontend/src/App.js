@@ -112,7 +112,11 @@ function App() {
     } catch (error) {
       console.error('Error adding transaction:', error);
       const errMsg = error.response?.data?.error || error.response?.data?.detail || 'Gagal menambahkan transaksi';
+<<<<<<< HEAD
       alert(errMsg);
+=======
+      alert(`❌ ${errMsg}`);
+>>>>>>> 172c077dd6946e1b9285de24f71a0ffe7546303c
     }
   };
 
@@ -147,6 +151,7 @@ function App() {
     setFilters(newFilters);
   };
 
+<<<<<<< HEAD
   const navItems = ['Dashboard', 'Transactions', 'Analytics', 'Budget', 'Goals', 'Settings'];
 
   return (
@@ -203,20 +208,41 @@ function App() {
 
           <aside className="dashboard-side" aria-label="Kontrol dan analitik">
             <TransactionForm
+=======
+  return (
+    <div className="App">
+      <header className="app-header">
+        <h1>Personal Finance Dashboard</h1>
+        <p>Kelola keuangan Anda dengan mudah</p>
+      </header>
+
+      <div className="container">
+        <Summary summary={summary} />
+
+        <div className="main-content">
+          <div className="left-panel">
+            <TransactionForm 
+>>>>>>> 172c077dd6946e1b9285de24f71a0ffe7546303c
               categories={categories}
               onSubmit={handleAddTransaction}
               editingTransaction={editingTransaction}
               onUpdate={handleUpdateTransaction}
               onCancelEdit={() => setEditingTransaction(null)}
             />
+<<<<<<< HEAD
 
             <CategoryChart data={categoryData} />
 
             <FilterPanel
+=======
+            
+            <FilterPanel 
+>>>>>>> 172c077dd6946e1b9285de24f71a0ffe7546303c
               categories={categories}
               filters={filters}
               onFilterChange={handleFilterChange}
             />
+<<<<<<< HEAD
           </aside>
         </div>
       </main>
@@ -232,6 +258,27 @@ function App() {
           </a>
         ))}
       </nav>
+=======
+          </div>
+
+          <div className="right-panel">
+            <CategoryChart data={categoryData} />
+          </div>
+        </div>
+
+        <TransactionList 
+          transactions={transactions}
+          loading={loading}
+          onEdit={setEditingTransaction}
+          onDelete={handleDeleteTransaction}
+        />
+      </div>
+
+      <footer className="app-footer">
+        <p>Hubungkan dengan Telegram Bot untuk input cepat</p>
+        <p>Gunakan /pemasukan atau /pengeluaran di bot Telegram Anda</p>
+      </footer>
+>>>>>>> 172c077dd6946e1b9285de24f71a0ffe7546303c
     </div>
   );
 }

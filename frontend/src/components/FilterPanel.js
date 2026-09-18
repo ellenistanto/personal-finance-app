@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
+<<<<<<< HEAD
+=======
+import { format, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
+>>>>>>> 172c077dd6946e1b9285de24f71a0ffe7546303c
 
 const FilterPanel = ({ categories, filters, onFilterChange }) => {
   const [localFilters, setLocalFilters] = useState(filters);
 
+<<<<<<< HEAD
   const formatInputDate = (date) => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -10,6 +15,8 @@ const FilterPanel = ({ categories, filters, onFilterChange }) => {
     return `${year}-${month}-${day}`;
   };
 
+=======
+>>>>>>> 172c077dd6946e1b9285de24f71a0ffe7546303c
   const handleChange = (e) => {
     const { name, value } = e.target;
     setLocalFilters(prev => ({
@@ -39,6 +46,7 @@ const FilterPanel = ({ categories, filters, onFilterChange }) => {
 
     switch(type) {
       case 'today':
+<<<<<<< HEAD
         start = formatInputDate(now);
         end = formatInputDate(now);
         break;
@@ -49,6 +57,18 @@ const FilterPanel = ({ categories, filters, onFilterChange }) => {
       case 'thisYear':
         start = formatInputDate(new Date(now.getFullYear(), 0, 1));
         end = formatInputDate(new Date(now.getFullYear(), 11, 31));
+=======
+        start = format(now, 'yyyy-MM-dd');
+        end = format(now, 'yyyy-MM-dd');
+        break;
+      case 'thisMonth':
+        start = format(startOfMonth(now), 'yyyy-MM-dd');
+        end = format(endOfMonth(now), 'yyyy-MM-dd');
+        break;
+      case 'thisYear':
+        start = format(startOfYear(now), 'yyyy-MM-dd');
+        end = format(endOfYear(now), 'yyyy-MM-dd');
+>>>>>>> 172c077dd6946e1b9285de24f71a0ffe7546303c
         break;
       default:
         start = '';
@@ -74,22 +94,40 @@ const FilterPanel = ({ categories, filters, onFilterChange }) => {
           <div className="button-group">
             <button 
               type="button" 
+<<<<<<< HEAD
               className="btn-secondary btn-compact" 
               onClick={() => setQuickFilter('today')}
+=======
+              className="btn-secondary" 
+              onClick={() => setQuickFilter('today')}
+              style={{ fontSize: '0.9rem', padding: '0.5rem' }}
+>>>>>>> 172c077dd6946e1b9285de24f71a0ffe7546303c
             >
               Hari Ini
             </button>
             <button 
               type="button" 
+<<<<<<< HEAD
               className="btn-secondary btn-compact" 
               onClick={() => setQuickFilter('thisMonth')}
+=======
+              className="btn-secondary" 
+              onClick={() => setQuickFilter('thisMonth')}
+              style={{ fontSize: '0.9rem', padding: '0.5rem' }}
+>>>>>>> 172c077dd6946e1b9285de24f71a0ffe7546303c
             >
               Bulan Ini
             </button>
             <button 
               type="button" 
+<<<<<<< HEAD
               className="btn-secondary btn-compact" 
               onClick={() => setQuickFilter('thisYear')}
+=======
+              className="btn-secondary" 
+              onClick={() => setQuickFilter('thisYear')}
+              style={{ fontSize: '0.9rem', padding: '0.5rem' }}
+>>>>>>> 172c077dd6946e1b9285de24f71a0ffe7546303c
             >
               Tahun Ini
             </button>

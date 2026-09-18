@@ -1,4 +1,9 @@
 import React from 'react';
+<<<<<<< HEAD
+=======
+import { format } from 'date-fns';
+import { id } from 'date-fns/locale';
+>>>>>>> 172c077dd6946e1b9285de24f71a0ffe7546303c
 
 const TransactionList = ({ transactions, loading, onEdit, onDelete }) => {
   const formatCurrency = (amount) => {
@@ -11,6 +16,7 @@ const TransactionList = ({ transactions, loading, onEdit, onDelete }) => {
 
   const formatDate = (dateString) => {
     try {
+<<<<<<< HEAD
       return new Intl.DateTimeFormat('id-ID', {
         day: '2-digit',
         month: 'short',
@@ -18,6 +24,9 @@ const TransactionList = ({ transactions, loading, onEdit, onDelete }) => {
         hour: '2-digit',
         minute: '2-digit'
       }).format(new Date(dateString));
+=======
+      return format(new Date(dateString), 'dd MMM yyyy, HH:mm', { locale: id });
+>>>>>>> 172c077dd6946e1b9285de24f71a0ffe7546303c
     } catch (error) {
       return dateString;
     }

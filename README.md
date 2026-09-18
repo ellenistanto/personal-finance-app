@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Personal Finance Dashboard
 
 Modern personal finance management application dengan liquid glass dark theme. Input transaksi via web dashboard atau Telegram bot.
@@ -201,3 +202,6 @@ Your Name
 ---
 
 **Built with ❤️ using React + Node.js**
+=======
+
+>>>>>>> 172c077dd6946e1b9285de24f71a0ffe7546303c
